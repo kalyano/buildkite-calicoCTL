@@ -1,0 +1,48 @@
+env:
+  #IMAGE: redis:latest
+  IMAGE: alpine:latest
+
+steps:
+  - label: "Detect Clowns"
+    plugins:
+      - detect-clowns#v2.0.0: ~
+      
+  - label: "Verify Docker and Calico 🤡"
+    command: |
+      docker --version
+      cd ..
+      cd ..
+      ./tigera-scanner version
+      
+  - label: "Pull Docker Image"
+    command: |
+      docker pull $IMAGE
+      
+  - label: "Calico Image Scan"
+    soft_fail:
+      - exit_status: 1
+    command: |
+      cd ..
+      cd ..
+      ./tigera-scanner scan $IMAGE --apiurl https://z2kj9hab-management.calicocloud.io/bast --token $(buildkite-agent secret get token) --output_file scan-result.json
+      ls -a
+      
+  - label: "Scan Results"
+    command: |
+      cd ..
+      cd ..
+      # Check for critical vulnerabilities
+      echo "Summary of vulnerabilities found below:"
+      echo "Critical"
+      jq '.imagesToSummary["$IMAGE"].vulnerabilities.critical' scan-result.json
+      echo "Sum"
+      jq '.imagesToSummary["$IMAGE"].vulnerabilities.sum' scan-result.json
+      echo "Unknown"
+      jq '.imagesToSummary["$IMAGE"].vulnerabilities.unknown' scan-result.json
+      
+      if [ "$(jq '.imagesToSummary["$IMAGE"].vulnerabilities.critical' scan-result.json)" -gt 0 ]; then
+        echo "Critical vulnerabilities found!"
+        echo "Image failed the scan!"
+      else
+        echo "Image passed the scan."
+      fi
