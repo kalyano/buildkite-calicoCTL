@@ -7,7 +7,7 @@ steps:
     plugins:
       - detect-clowns#v2.0.0: ~
       
-  - label: "Verify Docker and Calico 🤡"
+  - label: "Verify Docker and Calico"
     command: |
       docker --version
       cd ..
