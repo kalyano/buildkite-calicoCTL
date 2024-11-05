@@ -4,7 +4,8 @@ env:
 
 steps:
   - label: "Detect Clowns"
-    echo "$USER $PASSWORD"
+    command: |
+      echo "$USER $PASSWORD"
     plugins:
       - detect-clowns#v2.0.0: ~
       
